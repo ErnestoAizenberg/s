@@ -1,0 +1,44 @@
+[
+    {
+        "id": "aca67d3a-3f83-4b99-8ef0-21a5e222f47e",
+        "amount": "1000",
+        "user_id": 1,
+        "project_id": 1,
+        "stage_id": 1
+    },
+    {
+        "id": "b97fd7c5-30ed-456b-9b13-671336ddbddb",
+        "amount": "1000",
+        "user_id": 1,
+        "project_id": 1,
+        "stage_id": 1
+    },
+    {
+        "id": "3e8f257f-fdec-44d6-8abc-5d6b16eadffb",
+        "amount": "1000",
+        "user_id": 2,
+        "project_id": 2,
+        "stage_id": 2
+    },
+    {
+        "id": "d057adf7-cb7f-4f4e-b5a3-87cd396abf59",
+        "amount": "1000",
+        "user_id": 2,
+        "project_id": 2,
+        "stage_id": 2
+    },
+    {
+        "id": "9865e036-6513-4391-a403-d62d10f5e0a1",
+        "amount": "1000",
+        "user_id": 3,
+        "project_id": 3,
+        "stage_id": 3
+    },
+    {
+        "id": "f5a171c9-8534-4868-9734-b412832d5d67",
+        "amount": "1000",
+        "user_id": 3,
+        "project_id": 3,
+        "stage_id": 3
+    }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "fund1",
+    "description": "desc1",
+    "hot_line": "+79176542281",
+    "address": "address1"
+  },
+    {
+    "id": 2,
+    "name": "fund2",
+    "description": "desc2",
+    "hot_line": "+79176542282",
+    "address": "address2"
+  },
+      {
+    "id": 3,
+    "name": "fund3",
+    "description": "desc3",
+    "hot_line": "+79176542283",
+    "address": "address3"
+  }
+]

@@ -1,0 +1,831 @@
+/data/data/com.termux/files/usr/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-8.3.5, pluggy-1.6.0
+rootdir: /data/data/com.termux/files/home/w/sadaka_app/app
+configfile: pytest.ini
+plugins: anyio-4.9.0, mimesis-18.0.0, asyncio-1.0.0, Faker-37.4.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 2 items
+
+tests/payments/router/test_callback.py FF                                [100%]
+
+=================================== FAILURES ===================================
+_________________ TestPaymentCallback.test_callback_cancelled __________________
+
+self = <app.tests.payments.router.test_callback.TestPaymentCallback object at 0x745a2cf6b0>
+ac = <httpx.AsyncClient object at 0x745a20a900>
+
+    @patch("fastapi.Request.client", Address("185.71.76.1", 1234))  # For ip_security checker
+    async def test_callback_cancelled(self, ac) -> None:
+        callback_mock_canceled = self.callback_mock_success
+        callback_mock_canceled["status"] = "canceled"
+    
+>       response = await ac.post("/app/v1/payments/yookassa_callback", json={"object": callback_mock_canceled})
+
+tests/payments/router/test_callback.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1859: in post
+    return await self.request(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1629: in send
+    response = await self._send_handling_auth(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+../../../../usr/lib/python3.12/site-packages/httpx/_transports/asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/applications.py:112: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/errors.py:187: in __call__
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/errors.py:165: in __call__
+    await self.app(scope, receive, _send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/cors.py:85: in __call__
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/exceptions.py:62: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:714: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:734: in app
+    await route.handle(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:288: in handle
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:76: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:73: in app
+    response = await f(request)
+../../../../usr/lib/python3.12/site-packages/fastapi/routing.py:301: in app
+    raw_response = await run_endpoint_function(
+../../../../usr/lib/python3.12/site-packages/fastapi/routing.py:212: in run_endpoint_function
+    return await dependant.call(**values)
+v1/payment/router.py:40: in yookassa_success_callback
+    await use_case.execute()
+v1/payment/use_cases/callback.py:21: in execute
+    await self.__create_payment_in_db()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <v1.payment.use_cases.callback.YooCallbackSuccessUseCaseImpl object at 0x7458f70950>
+
+    async def __create_payment_in_db(self):
+        self.webhook_object = await self.__get_webhook_data_object()
+        webhook_object = self.webhook_object
+        project: Project = await self.__get_project()
+    
+        payment_dao = PaymentDAO(session=self.session)
+        if webhook_object.status == PaymentStatusEnum.SUCCEEDED:
+            await payment_dao.add(
+                values=PaymentCreateSchema(
+                    id=webhook_object.id,
+                    amount=webhook_object.amount.value,
+                    income_amount=webhook_object.income_amount.value,
+                    test=webhook_object.test,
+                    status=PaymentStatusEnum.SUCCEEDED,
+                    user_id=webhook_object.metadata.user_id,
+                    project_id=webhook_object.metadata.project_id,
+                    stage_id=project.active_stage_number,
+                    created_at=webhook_object.created_at,
+                    captured_at=webhook_object.captured_at,
+                )
+            )
+    
+        else:
+>           raise NotImplementedError("Should handle other situations too")
+E           NotImplementedError: Should handle other situations too
+
+v1/payment/use_cases/callback.py:46: NotImplementedError
+---------------------------- Captured stdout setup -----------------------------
+2025-06-13 18:58:32,603 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-06-13 18:58:32,604 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("citys")
+2025-06-13 18:58:32,604 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,611 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("regions")
+2025-06-13 18:58:32,611 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,613 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("countrys")
+2025-06-13 18:58:32,614 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,616 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("files")
+2025-06-13 18:58:32,616 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,618 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("funds")
+2025-06-13 18:58:32,618 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,620 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("payments")
+2025-06-13 18:58:32,620 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,622 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2025-06-13 18:58:32,622 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,624 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("stages")
+2025-06-13 18:58:32,624 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,627 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-06-13 18:58:32,627 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,634 INFO sqlalchemy.engine.Engine 
+DROP TABLE citys
+2025-06-13 18:58:32,634 INFO sqlalchemy.engine.Engine [no key 0.00048s] ()
+2025-06-13 18:58:32,672 INFO sqlalchemy.engine.Engine 
+DROP TABLE regions
+2025-06-13 18:58:32,673 INFO sqlalchemy.engine.Engine [no key 0.00047s] ()
+2025-06-13 18:58:32,686 INFO sqlalchemy.engine.Engine 
+DROP TABLE countrys
+2025-06-13 18:58:32,687 INFO sqlalchemy.engine.Engine [no key 0.00048s] ()
+2025-06-13 18:58:32,701 INFO sqlalchemy.engine.Engine 
+DROP TABLE files
+2025-06-13 18:58:32,701 INFO sqlalchemy.engine.Engine [no key 0.00048s] ()
+2025-06-13 18:58:32,717 INFO sqlalchemy.engine.Engine 
+DROP TABLE funds
+2025-06-13 18:58:32,717 INFO sqlalchemy.engine.Engine [no key 0.00048s] ()
+2025-06-13 18:58:32,730 INFO sqlalchemy.engine.Engine 
+DROP TABLE payments
+2025-06-13 18:58:32,731 INFO sqlalchemy.engine.Engine [no key 0.00077s] ()
+2025-06-13 18:58:32,744 INFO sqlalchemy.engine.Engine 
+DROP TABLE projects
+2025-06-13 18:58:32,744 INFO sqlalchemy.engine.Engine [no key 0.00048s] ()
+2025-06-13 18:58:32,757 INFO sqlalchemy.engine.Engine 
+DROP TABLE stages
+2025-06-13 18:58:32,758 INFO sqlalchemy.engine.Engine [no key 0.00052s] ()
+2025-06-13 18:58:32,775 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2025-06-13 18:58:32,776 INFO sqlalchemy.engine.Engine [no key 0.00093s] ()
+2025-06-13 18:58:32,793 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("citys")
+2025-06-13 18:58:32,794 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,798 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("citys")
+2025-06-13 18:58:32,799 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,803 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("regions")
+2025-06-13 18:58:32,803 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,807 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("regions")
+2025-06-13 18:58:32,808 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,813 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("countrys")
+2025-06-13 18:58:32,814 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,818 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("countrys")
+2025-06-13 18:58:32,818 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,821 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("files")
+2025-06-13 18:58:32,822 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,825 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("files")
+2025-06-13 18:58:32,826 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,829 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("funds")
+2025-06-13 18:58:32,830 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,833 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("funds")
+2025-06-13 18:58:32,833 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,837 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("payments")
+2025-06-13 18:58:32,838 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,841 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("payments")
+2025-06-13 18:58:32,841 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,846 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("projects")
+2025-06-13 18:58:32,847 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,850 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("projects")
+2025-06-13 18:58:32,851 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,855 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("stages")
+2025-06-13 18:58:32,855 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,859 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("stages")
+2025-06-13 18:58:32,860 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,865 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-06-13 18:58:32,865 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,869 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2025-06-13 18:58:32,869 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-06-13 18:58:32,880 INFO sqlalchemy.engine.Engine 
+CREATE TABLE countrys (
+	name VARCHAR NOT NULL, 
+	language VARCHAR(2) DEFAULT 'RU' NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+2025-06-13 18:58:32,881 INFO sqlalchemy.engine.Engine [no key 0.00069s] ()
+2025-06-13 18:58:32,910 INFO sqlalchemy.engine.Engine 
+CREATE TABLE files (
+	name VARCHAR NOT NULL, 
+	size INTEGER NOT NULL, 
+	url VARCHAR NOT NULL, 
+	type VARCHAR(8) NOT NULL, 
+	mime VARCHAR(4) NOT NULL, 
+	fund_document_id INTEGER, 
+	project_document_id INTEGER, 
+	project_picture_id INTEGER, 
+	stage_id INTEGER, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(fund_document_id) REFERENCES funds (id), 
+	FOREIGN KEY(project_document_id) REFERENCES projects (id), 
+	FOREIGN KEY(project_picture_id) REFERENCES projects (id), 
+	FOREIGN KEY(stage_id) REFERENCES stages (id)
+)
+
+
+2025-06-13 18:58:32,910 INFO sqlalchemy.engine.Engine [no key 0.00065s] ()
+2025-06-13 18:58:32,928 INFO sqlalchemy.engine.Engine 
+CREATE TABLE funds (
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	hot_line VARCHAR NOT NULL, 
+	address VARCHAR NOT NULL, 
+	region_id INTEGER DEFAULT 1 NOT NULL, 
+	picture_id INTEGER, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(region_id) REFERENCES regions (id), 
+	UNIQUE (picture_id), 
+	FOREIGN KEY(picture_id) REFERENCES files (id)
+)
+
+
+2025-06-13 18:58:32,929 INFO sqlalchemy.engine.Engine [no key 0.00073s] ()
+2025-06-13 18:58:32,993 INFO sqlalchemy.engine.Engine 
+CREATE TABLE projects (
+	name VARCHAR NOT NULL, 
+	status VARCHAR(8) NOT NULL, 
+	description VARCHAR, 
+	goal INTEGER NOT NULL, 
+	fund_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(fund_id) REFERENCES funds (id)
+)
+
+
+2025-06-13 18:58:32,993 INFO sqlalchemy.engine.Engine [no key 0.00055s] ()
+2025-06-13 18:58:33,020 INFO sqlalchemy.engine.Engine 
+CREATE TABLE stages (
+	number INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	goal INTEGER NOT NULL, 
+	status VARCHAR(8) NOT NULL, 
+	project_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT unique_stage_number_per_project UNIQUE (project_id, number), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
+)
+
+
+2025-06-13 18:58:33,020 INFO sqlalchemy.engine.Engine [no key 0.00070s] ()
+2025-06-13 18:58:33,040 INFO sqlalchemy.engine.Engine 
+CREATE TABLE regions (
+	name VARCHAR NOT NULL, 
+	picture_id INTEGER, 
+	country_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name), 
+	UNIQUE (picture_id), 
+	CONSTRAINT fk_region_picture_id FOREIGN KEY(picture_id) REFERENCES files (id) ON DELETE SET NULL, 
+	FOREIGN KEY(country_id) REFERENCES countrys (id)
+)
+
+
+2025-06-13 18:58:33,041 INFO sqlalchemy.engine.Engine [no key 0.00121s] ()
+2025-06-13 18:58:33,060 INFO sqlalchemy.engine.Engine 
+CREATE TABLE citys (
+	name VARCHAR NOT NULL, 
+	region_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name), 
+	FOREIGN KEY(region_id) REFERENCES regions (id)
+)
+
+
+2025-06-13 18:58:33,061 INFO sqlalchemy.engine.Engine [no key 0.00095s] ()
+2025-06-13 18:58:33,080 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	name VARCHAR NOT NULL, 
+	password VARCHAR, 
+	google_access_token VARCHAR, 
+	email VARCHAR NOT NULL, 
+	language VARCHAR(2) DEFAULT 'RU' NOT NULL, 
+	role VARCHAR(10) DEFAULT 'user' NOT NULL, 
+	is_anonymous BOOLEAN NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	picture_id INTEGER, 
+	city_id INTEGER DEFAULT 1 NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (email), 
+	UNIQUE (picture_id), 
+	FOREIGN KEY(picture_id) REFERENCES files (id), 
+	FOREIGN KEY(city_id) REFERENCES citys (id)
+)
+
+
+2025-06-13 18:58:33,081 INFO sqlalchemy.engine.Engine [no key 0.00098s] ()
+2025-06-13 18:58:33,101 INFO sqlalchemy.engine.Engine 
+CREATE TABLE payments (
+	id UUID NOT NULL, 
+	created_at TIMESTAMP NOT NULL, 
+	captured_at TIMESTAMP NOT NULL, 
+	amount FLOAT, 
+	income_amount FLOAT, 
+	test BOOLEAN NOT NULL, 
+	status VARCHAR(19) NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	project_id INTEGER NOT NULL, 
+	stage_id INTEGER NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(stage_id) REFERENCES stages (id)
+)
+
+
+2025-06-13 18:58:33,102 INFO sqlalchemy.engine.Engine [no key 0.00111s] ()
+2025-06-13 18:58:33,135 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-06-13 18:58:33,143 INFO sqlalchemy.engine.Engine INSERT INTO countrys (name, language, id) VALUES (?, ?, ?), (?, ?, ?)
+2025-06-13 18:58:33,144 INFO sqlalchemy.engine.Engine [no key 0.00159s] ('Russia', 'RU', 1, 'Kazakhstan', 'EN', 2)
+2025-06-13 18:58:33,157 INFO sqlalchemy.engine.Engine INSERT INTO regions (name, picture_id, country_id, id) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)
+2025-06-13 18:58:33,158 INFO sqlalchemy.engine.Engine [no key 0.00146s] ('Tatarstan', 14, 1, 1, 'Bashkortostan', 15, 1, 2, 'Aktobe obl', 16, 2, 3)
+2025-06-13 18:58:33,167 INFO sqlalchemy.engine.Engine INSERT INTO citys (name, region_id, id) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+2025-06-13 18:58:33,168 INFO sqlalchemy.engine.Engine [no key 0.00083s] ('Kazan', 1, 1, 'Ufa', 2, 2, 'Ishim', 1, 3)
+2025-06-13 18:58:33,179 INFO sqlalchemy.engine.Engine INSERT INTO users (name, password, email, language, role, is_anonymous, is_active, picture_id, city_id, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,180 INFO sqlalchemy.engine.Engine [no key 0.00155s] ('superadmin', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'superadmin@test.com', 'RU', 'SUPERUSER', 0, 1, 9, 1, 1, 'admin', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'admin@test.com', 'RU', 'SUPERUSER', 0, 1, 10, 1, 2, 'moderator', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'moderator@test.com', 'RU', 'USER', 0, 1, 11, 1, 3, 'user1', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'user1@test.com', 'RU', 'USER', 0, 1, 12, 1, 4, 'user2', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'user2@test.com', 'RU', 'USER', 0, 1, 13, 1, 5)
+2025-06-13 18:58:33,187 INFO sqlalchemy.engine.Engine INSERT INTO funds (name, description, hot_line, address, region_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,188 INFO sqlalchemy.engine.Engine [no key 0.00083s] ('fund1', 'desc1', '+79176542281', 'address1', 1, 1, 'fund2', 'desc2', '+79176542282', 'address2', 1, 2, 'fund3', 'desc3', '+79176542283', 'address3', 1, 3)
+2025-06-13 18:58:33,205 INFO sqlalchemy.engine.Engine INSERT INTO projects (name, status, description, goal, fund_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,206 INFO sqlalchemy.engine.Engine [no key 0.00173s] ('project1', 'ACTIVE', 'desc1', 10000, 1, 1, 'project2', 'ACTIVE', 'desc2', 20000, 2, 2, 'project3', 'ACTIVE', 'desc3', 30000, 3, 3, 'project4', 'ACTIVE', 'desc4', 40000, 1, 4, 'project5', 'ACTIVE', 'desc5', 50000, 2, 5, 'project6', 'ACTIVE', 'desc6', 60000, 3, 6, 'project7', 'ACTIVE', 'desc7', 70000, 1, 7, 'project8', 'ACTIVE', 'desc8', 80000, 2, 8, 'project9', 'ACTIVE' ... 80 parameters truncated ... 1, 22, 'project23', 'FINISHED', 'desc23', 230000, 2, 23, 'project24', 'FINISHED', 'desc24', 240000, 3, 24, 'project25', 'FINISHED', 'desc25', 250000, 1, 25, 'project26', 'FINISHED', 'desc26', 260000, 2, 26, 'project27', 'FINISHED', 'desc27', 270000, 3, 27, 'project28', 'FINISHED', 'desc28', 280000, 1, 28, 'project29', 'FINISHED', 'desc29', 290000, 2, 29, 'project30', 'FINISHED', 'desc30', 300000, 3, 30)
+2025-06-13 18:58:33,214 INFO sqlalchemy.engine.Engine INSERT INTO stages (number, name, goal, status, project_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,214 INFO sqlalchemy.engine.Engine [no key 0.00079s] (1, 'proj1 stage1', 1000, 'FINISHED', 1, 1, 2, 'proj1 stage2', 2000, 'ACTIVE', 1, 2, 1, 'proj2 stage1', 3000, 'FINISHED', 2, 3, 2, 'proj2 stage2', 4000, 'ACTIVE', 2, 4)
+2025-06-13 18:58:33,237 INFO sqlalchemy.engine.Engine INSERT INTO files (name, size, url, type, mime, fund_document_id, project_document_id, stage_id, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,237 INFO sqlalchemy.engine.Engine [no key 0.00200s] ('Док1 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F1.png', 'DOCUMENT', 'PDF', None, 1, None, 1, 'Док2 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F2.png', 'DOCUMENT', 'PDF', None, 1, None, 2, 'Док1 для Проекта 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F3.png', 'DOCUMENT', 'PDF', None, 2, None, 3, 'Док2 для Проекта 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F4.png', 'DOCUMENT', 'PDF', None, 2, None, 4, 'Картинка 1 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F5.png', 'PICTURE', 'JPEG', None, None, None, 25, 'Картинка 2 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F6.png', 'PICTURE', 'JPEG' ... 152 parameters truncated ... 'JPEG', 2, None, None, 19, 'Документ 2 для Фонда 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F0.png', 'PICTURE', 'JPEG', 2, None, None, 20, 'Документ 1 для Фонда 3', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F1.png', 'PICTURE', 'JPEG', 3, None, None, 21, 'Документ 2 для Фонда 3', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F2.png', 'PICTURE', 'JPEG', 3, None, None, 22, 'Картинка 1 для Фонда 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F3.png', 'PICTURE', 'JPEG', None, None, None, 23, 'Картинка 2 для Фонда 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F4.png', 'PICTURE', 'JPEG', None, None, None, 24)
+2025-06-13 18:58:33,251 INFO sqlalchemy.engine.Engine INSERT INTO payments (id, created_at, captured_at, amount, test, status, user_id, project_id, stage_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-06-13 18:58:33,252 INFO sqlalchemy.engine.Engine [no key 0.00129s] ('aca67d3a3f834b998ef021a5e222f47e', '2025-06-13 18:58:33.245871', '2025-06-13 18:58:33.245889', 1000.0, 0, 'PENDING', 1, 1, 1, 'b97fd7c530ed456b9b13671336ddbddb', '2025-06-13 18:58:33.245905', '2025-06-13 18:58:33.245907', 1000.0, 0, 'PENDING', 1, 1, 1, '3e8f257ffdec44d68abc5d6b16eadffb', '2025-06-13 18:58:33.245916', '2025-06-13 18:58:33.245918', 1000.0, 0, 'PENDING', 2, 2, 2, 'd057adf7cb7f4f4eb5a387cd396abf59', '2025-06-13 18:58:33.245927', '2025-06-13 18:58:33.245929', 1000.0, 0, 'PENDING', 2, 2, 2, '9865e03665134391a403d62d10f5e0a1', '2025-06-13 18:58:33.245937', '2025-06-13 18:58:33.245938', 1000.0, 0, 'PENDING', 3, 3, 3, 'f5a171c9853448689734b412832d5d67', '2025-06-13 18:58:33.245945', '2025-06-13 18:58:33.245947', 1000.0, 0, 'PENDING', 3, 3, 3)
+2025-06-13 18:58:33,256 INFO sqlalchemy.engine.Engine COMMIT
+2025-06-13 18:58:33,276 INFO sqlalchemy.engine.Engine COMMIT
+------------------------------ Captured log setup ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("citys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("regions")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("countrys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("files")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("funds")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("payments")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("stages")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("users")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE citys
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00048s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE regions
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00047s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE countrys
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00048s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE files
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00048s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE funds
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00048s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE payments
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00077s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE projects
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00048s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE stages
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00052s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+DROP TABLE users
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00093s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("citys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("citys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("regions")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("regions")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("countrys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("countrys")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("files")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("files")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("funds")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("funds")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("payments")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("payments")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("projects")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("stages")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("stages")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA main.table_info("users")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 PRAGMA temp.table_info("users")
+INFO     sqlalchemy.engine.Engine:base.py:1842 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE countrys (
+	name VARCHAR NOT NULL, 
+	language VARCHAR(2) DEFAULT 'RU' NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00069s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE files (
+	name VARCHAR NOT NULL, 
+	size INTEGER NOT NULL, 
+	url VARCHAR NOT NULL, 
+	type VARCHAR(8) NOT NULL, 
+	mime VARCHAR(4) NOT NULL, 
+	fund_document_id INTEGER, 
+	project_document_id INTEGER, 
+	project_picture_id INTEGER, 
+	stage_id INTEGER, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(fund_document_id) REFERENCES funds (id), 
+	FOREIGN KEY(project_document_id) REFERENCES projects (id), 
+	FOREIGN KEY(project_picture_id) REFERENCES projects (id), 
+	FOREIGN KEY(stage_id) REFERENCES stages (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00065s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE funds (
+	name VARCHAR NOT NULL, 
+	description VARCHAR, 
+	hot_line VARCHAR NOT NULL, 
+	address VARCHAR NOT NULL, 
+	region_id INTEGER DEFAULT 1 NOT NULL, 
+	picture_id INTEGER, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(region_id) REFERENCES regions (id), 
+	UNIQUE (picture_id), 
+	FOREIGN KEY(picture_id) REFERENCES files (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00073s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE projects (
+	name VARCHAR NOT NULL, 
+	status VARCHAR(8) NOT NULL, 
+	description VARCHAR, 
+	goal INTEGER NOT NULL, 
+	fund_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(fund_id) REFERENCES funds (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00055s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE stages (
+	number INTEGER NOT NULL, 
+	name VARCHAR NOT NULL, 
+	goal INTEGER NOT NULL, 
+	status VARCHAR(8) NOT NULL, 
+	project_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT unique_stage_number_per_project UNIQUE (project_id, number), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00070s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE regions (
+	name VARCHAR NOT NULL, 
+	picture_id INTEGER, 
+	country_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name), 
+	UNIQUE (picture_id), 
+	CONSTRAINT fk_region_picture_id FOREIGN KEY(picture_id) REFERENCES files (id) ON DELETE SET NULL, 
+	FOREIGN KEY(country_id) REFERENCES countrys (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00121s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE citys (
+	name VARCHAR NOT NULL, 
+	region_id INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (name), 
+	FOREIGN KEY(region_id) REFERENCES regions (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00095s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE users (
+	name VARCHAR NOT NULL, 
+	password VARCHAR, 
+	google_access_token VARCHAR, 
+	email VARCHAR NOT NULL, 
+	language VARCHAR(2) DEFAULT 'RU' NOT NULL, 
+	role VARCHAR(10) DEFAULT 'user' NOT NULL, 
+	is_anonymous BOOLEAN NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	picture_id INTEGER, 
+	city_id INTEGER DEFAULT 1 NOT NULL, 
+	id INTEGER NOT NULL, 
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (email), 
+	UNIQUE (picture_id), 
+	FOREIGN KEY(picture_id) REFERENCES files (id), 
+	FOREIGN KEY(city_id) REFERENCES citys (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00098s] ()
+INFO     sqlalchemy.engine.Engine:base.py:1842 
+CREATE TABLE payments (
+	id UUID NOT NULL, 
+	created_at TIMESTAMP NOT NULL, 
+	captured_at TIMESTAMP NOT NULL, 
+	amount FLOAT, 
+	income_amount FLOAT, 
+	test BOOLEAN NOT NULL, 
+	status VARCHAR(19) NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	project_id INTEGER NOT NULL, 
+	stage_id INTEGER NOT NULL, 
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id), 
+	FOREIGN KEY(stage_id) REFERENCES stages (id)
+)
+
+
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00111s] ()
+INFO     sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO countrys (name, language, id) VALUES (?, ?, ?), (?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00159s] ('Russia', 'RU', 1, 'Kazakhstan', 'EN', 2)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO regions (name, picture_id, country_id, id) VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00146s] ('Tatarstan', 14, 1, 1, 'Bashkortostan', 15, 1, 2, 'Aktobe obl', 16, 2, 3)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO citys (name, region_id, id) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00083s] ('Kazan', 1, 1, 'Ufa', 2, 2, 'Ishim', 1, 3)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO users (name, password, email, language, role, is_anonymous, is_active, picture_id, city_id, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00155s] ('superadmin', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'superadmin@test.com', 'RU', 'SUPERUSER', 0, 1, 9, 1, 1, 'admin', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'admin@test.com', 'RU', 'SUPERUSER', 0, 1, 10, 1, 2, 'moderator', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'moderator@test.com', 'RU', 'USER', 0, 1, 11, 1, 3, 'user1', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'user1@test.com', 'RU', 'USER', 0, 1, 12, 1, 4, 'user2', '$2b$12$rm7Bu.bjhNHKU25th37EFO6tpnvjz5EiB2s7QyJX/BKx9aOsIwEKm', 'user2@test.com', 'RU', 'USER', 0, 1, 13, 1, 5)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO funds (name, description, hot_line, address, region_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00083s] ('fund1', 'desc1', '+79176542281', 'address1', 1, 1, 'fund2', 'desc2', '+79176542282', 'address2', 1, 2, 'fund3', 'desc3', '+79176542283', 'address3', 1, 3)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO projects (name, status, description, goal, fund_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00173s] ('project1', 'ACTIVE', 'desc1', 10000, 1, 1, 'project2', 'ACTIVE', 'desc2', 20000, 2, 2, 'project3', 'ACTIVE', 'desc3', 30000, 3, 3, 'project4', 'ACTIVE', 'desc4', 40000, 1, 4, 'project5', 'ACTIVE', 'desc5', 50000, 2, 5, 'project6', 'ACTIVE', 'desc6', 60000, 3, 6, 'project7', 'ACTIVE', 'desc7', 70000, 1, 7, 'project8', 'ACTIVE', 'desc8', 80000, 2, 8, 'project9', 'ACTIVE' ... 80 parameters truncated ... 1, 22, 'project23', 'FINISHED', 'desc23', 230000, 2, 23, 'project24', 'FINISHED', 'desc24', 240000, 3, 24, 'project25', 'FINISHED', 'desc25', 250000, 1, 25, 'project26', 'FINISHED', 'desc26', 260000, 2, 26, 'project27', 'FINISHED', 'desc27', 270000, 3, 27, 'project28', 'FINISHED', 'desc28', 280000, 1, 28, 'project29', 'FINISHED', 'desc29', 290000, 2, 29, 'project30', 'FINISHED', 'desc30', 300000, 3, 30)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO stages (number, name, goal, status, project_id, id) VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00079s] (1, 'proj1 stage1', 1000, 'FINISHED', 1, 1, 2, 'proj1 stage2', 2000, 'ACTIVE', 1, 2, 1, 'proj2 stage1', 3000, 'FINISHED', 2, 3, 2, 'proj2 stage2', 4000, 'ACTIVE', 2, 4)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO files (name, size, url, type, mime, fund_document_id, project_document_id, stage_id, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00200s] ('Док1 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F1.png', 'DOCUMENT', 'PDF', None, 1, None, 1, 'Док2 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F2.png', 'DOCUMENT', 'PDF', None, 1, None, 2, 'Док1 для Проекта 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F3.png', 'DOCUMENT', 'PDF', None, 2, None, 3, 'Док2 для Проекта 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F4.png', 'DOCUMENT', 'PDF', None, 2, None, 4, 'Картинка 1 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F5.png', 'PICTURE', 'JPEG', None, None, None, 25, 'Картинка 2 для Проекта 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F6.png', 'PICTURE', 'JPEG' ... 152 parameters truncated ... 'JPEG', 2, None, None, 19, 'Документ 2 для Фонда 2', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F0.png', 'PICTURE', 'JPEG', 2, None, None, 20, 'Документ 1 для Фонда 3', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F1.png', 'PICTURE', 'JPEG', 3, None, None, 21, 'Документ 2 для Фонда 3', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F2.png', 'PICTURE', 'JPEG', 3, None, None, 22, 'Картинка 1 для Фонда 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F3.png', 'PICTURE', 'JPEG', None, None, None, 23, 'Картинка 2 для Фонда 1', '123', 'https://b35fabb0-4ffa-4a15-9f0b-c3e80016c729.selstorage.ru/tests%2Fdigits%2F4.png', 'PICTURE', 'JPEG', None, None, None, 24)
+INFO     sqlalchemy.engine.Engine:base.py:1842 INSERT INTO payments (id, created_at, captured_at, amount, test, status, user_id, project_id, stage_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?)
+INFO     sqlalchemy.engine.Engine:base.py:1842 [no key 0.00129s] ('aca67d3a3f834b998ef021a5e222f47e', '2025-06-13 18:58:33.245871', '2025-06-13 18:58:33.245889', 1000.0, 0, 'PENDING', 1, 1, 1, 'b97fd7c530ed456b9b13671336ddbddb', '2025-06-13 18:58:33.245905', '2025-06-13 18:58:33.245907', 1000.0, 0, 'PENDING', 1, 1, 1, '3e8f257ffdec44d68abc5d6b16eadffb', '2025-06-13 18:58:33.245916', '2025-06-13 18:58:33.245918', 1000.0, 0, 'PENDING', 2, 2, 2, 'd057adf7cb7f4f4eb5a387cd396abf59', '2025-06-13 18:58:33.245927', '2025-06-13 18:58:33.245929', 1000.0, 0, 'PENDING', 2, 2, 2, '9865e03665134391a403d62d10f5e0a1', '2025-06-13 18:58:33.245937', '2025-06-13 18:58:33.245938', 1000.0, 0, 'PENDING', 3, 3, 3, 'f5a171c9853448689734b412832d5d67', '2025-06-13 18:58:33.245945', '2025-06-13 18:58:33.245947', 1000.0, 0, 'PENDING', 3, 3, 3)
+INFO     sqlalchemy.engine.Engine:base.py:2704 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:2704 COMMIT
+----------------------------- Captured stdout call -----------------------------
+2025-06-13 18:58:33,304 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-06-13 18:58:33,762 INFO sqlalchemy.engine.Engine SELECT projects.name, projects.status, projects.description, projects.goal, projects.fund_id, projects.id, projects.created_at, projects.updated_at, files_1.name AS name_1, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_2, countrys_1.created_at AS created_at_2, countrys_1.updated_at AS updated_at_2, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_3, regions_1.created_at AS created_at_3, regions_1.updated_at AS updated_at_3, files_2.name AS name_4, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_1, files_2.id AS id_4, files_2.created_at AS created_at_4, files_2.updated_at AS updated_at_4, files_3.name AS name_5, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_2, files_3.id AS id_5, files_3.created_at AS created_at_5, files_3.updated_at AS updated_at_5, funds_1.name AS name_6, funds_1.description AS description_1, funds_1.hot_line, funds_1.address, funds_1.region_id, funds_1.picture_id AS picture_id_1, funds_1.id AS id_6, funds_1.created_at AS created_at_6, funds_1.updated_at AS updated_at_6, files_4.name AS name_7, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_3, files_4.id AS id_7, files_4.created_at AS created_at_7, files_4.updated_at AS updated_at_7, files_5.name AS name_8, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_4, files_5.id AS id_8, files_5.created_at AS created_at_8, files_5.updated_at AS updated_at_8, files_6.name AS name_9, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_5, files_6.id AS id_9, files_6.created_at AS created_at_9, files_6.updated_at AS updated_at_9, files_7.name AS name_10, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_6, files_7.id AS id_10, files_7.created_at AS created_at_10, files_7.updated_at AS updated_at_10, files_8.name AS name_11, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_7, files_8.id AS id_11, files_8.created_at AS created_at_11, files_8.updated_at AS updated_at_11, countrys_2.name AS name_12, countrys_2.language AS language_1, countrys_2.id AS id_12, countrys_2.created_at AS created_at_12, countrys_2.updated_at AS updated_at_12, regions_2.name AS name_13, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_13, regions_2.created_at AS created_at_13, regions_2.updated_at AS updated_at_13, citys_1.name AS name_14, citys_1.region_id AS region_id_1, citys_1.id AS id_14, citys_1.created_at AS created_at_14, citys_1.updated_at AS updated_at_14, users_1.name AS name_15, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_2, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_3, users_1.city_id, users_1.id AS id_15, users_1.created_at AS created_at_15, users_1.updated_at AS updated_at_15, payments_1.id AS id_16, payments_1.created_at AS created_at_16, payments_1.captured_at, payments_1.amount, payments_1.income_amount, payments_1.test, payments_1.status AS status_1, payments_1.user_id, payments_1.project_id, payments_1.stage_id AS stage_id_8, payments_1.updated_at AS updated_at_16, stages_1.number, stages_1.name AS name_16, stages_1.goal AS goal_1, stages_1.status AS status_2, stages_1.project_id AS project_id_1, stages_1.id AS id_17, stages_1.created_at AS created_at_17, stages_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, files_10.name AS name_18, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_19, files_10.created_at AS created_at_19, files_10.updated_at AS updated_at_19, countrys_3.name AS name_19, countrys_3.language AS language_3, countrys_3.id AS id_20, countrys_3.created_at AS created_at_20, countrys_3.updated_at AS updated_at_20, regions_3.name AS name_20, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_21, regions_3.created_at AS created_at_21, regions_3.updated_at AS updated_at_21, citys_2.name AS name_21, citys_2.region_id AS region_id_2, citys_2.id AS id_22, citys_2.created_at AS created_at_22, citys_2.updated_at AS updated_at_22, users_2.name AS name_22, users_2.password AS password_1, users_2.google_access_token AS google_access_token_1, users_2.email AS email_1, users_2.language AS language_4, users_2.role AS role_1, users_2.is_anonymous AS is_anonymous_1, users_2.is_active AS is_active_1, users_2.picture_id AS picture_id_5, users_2.city_id AS city_id_1, users_2.id AS id_23, users_2.created_at AS created_at_23, users_2.updated_at AS updated_at_23, files_11.name AS name_23, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_24, files_11.created_at AS created_at_24, files_11.updated_at AS updated_at_24, stages_2.number AS number_1, stages_2.name AS name_24, stages_2.goal AS goal_2, stages_2.status AS status_3, stages_2.project_id AS project_id_2, stages_2.id AS id_25, stages_2.created_at AS created_at_25, stages_2.updated_at AS updated_at_25, payments_2.id AS id_26, payments_2.created_at AS created_at_26, payments_2.captured_at AS captured_at_1, payments_2.amount AS amount_1, payments_2.income_amount AS income_amount_1, payments_2.test AS test_1, payments_2.status AS status_4, payments_2.user_id AS user_id_1, payments_2.project_id AS project_id_3, payments_2.stage_id AS stage_id_12, payments_2.updated_at AS updated_at_26 
+FROM projects LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects.fund_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = funds_1.region_id LEFT OUTER JOIN files AS files_1 ON files_1.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN files AS files_2 ON files_2.id = funds_1.picture_id LEFT OUTER JOIN files AS files_3 ON funds_1.id = files_3.fund_document_id LEFT OUTER JOIN files AS files_4 ON projects.id = files_4.project_document_id LEFT OUTER JOIN files AS files_5 ON projects.id = files_5.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects.id = stages_1.project_id LEFT OUTER JOIN files AS files_6 ON stages_1.id = files_6.stage_id LEFT OUTER JOIN payments AS payments_1 ON stages_1.id = payments_1.stage_id LEFT OUTER JOIN users AS users_1 ON users_1.id = payments_1.user_id LEFT OUTER JOIN files AS files_7 ON files_7.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = citys_1.region_id LEFT OUTER JOIN files AS files_8 ON files_8.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN payments AS payments_2 ON projects.id = payments_2.project_id LEFT OUTER JOIN users AS users_2 ON users_2.id = payments_2.user_id LEFT OUTER JOIN files AS files_9 ON files_9.id = users_2.picture_id LEFT OUTER JOIN citys AS citys_2 ON citys_2.id = users_2.city_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = citys_2.region_id LEFT OUTER JOIN files AS files_10 ON files_10.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments_2.stage_id LEFT OUTER JOIN files AS files_11 ON stages_2.id = files_11.stage_id 
+WHERE projects.id = ?
+2025-06-13 18:58:33,763 INFO sqlalchemy.engine.Engine [generated in 0.00121s] (1,)
+2025-06-13 18:58:33,858 INFO sqlalchemy.engine.Engine ROLLBACK
+----------------------------- Captured stderr call -----------------------------
+2025-06-13 18:58:33.857 | INFO     | v1.dao.base:find_one_or_none_by_id:31 - Запись Project с ID 1 найдена.
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1842 SELECT projects.name, projects.status, projects.description, projects.goal, projects.fund_id, projects.id, projects.created_at, projects.updated_at, files_1.name AS name_1, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_2, countrys_1.created_at AS created_at_2, countrys_1.updated_at AS updated_at_2, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_3, regions_1.created_at AS created_at_3, regions_1.updated_at AS updated_at_3, files_2.name AS name_4, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_1, files_2.id AS id_4, files_2.created_at AS created_at_4, files_2.updated_at AS updated_at_4, files_3.name AS name_5, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_2, files_3.id AS id_5, files_3.created_at AS created_at_5, files_3.updated_at AS updated_at_5, funds_1.name AS name_6, funds_1.description AS description_1, funds_1.hot_line, funds_1.address, funds_1.region_id, funds_1.picture_id AS picture_id_1, funds_1.id AS id_6, funds_1.created_at AS created_at_6, funds_1.updated_at AS updated_at_6, files_4.name AS name_7, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_3, files_4.id AS id_7, files_4.created_at AS created_at_7, files_4.updated_at AS updated_at_7, files_5.name AS name_8, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_4, files_5.id AS id_8, files_5.created_at AS created_at_8, files_5.updated_at AS updated_at_8, files_6.name AS name_9, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_5, files_6.id AS id_9, files_6.created_at AS created_at_9, files_6.updated_at AS updated_at_9, files_7.name AS name_10, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_6, files_7.id AS id_10, files_7.created_at AS created_at_10, files_7.updated_at AS updated_at_10, files_8.name AS name_11, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_7, files_8.id AS id_11, files_8.created_at AS created_at_11, files_8.updated_at AS updated_at_11, countrys_2.name AS name_12, countrys_2.language AS language_1, countrys_2.id AS id_12, countrys_2.created_at AS created_at_12, countrys_2.updated_at AS updated_at_12, regions_2.name AS name_13, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_13, regions_2.created_at AS created_at_13, regions_2.updated_at AS updated_at_13, citys_1.name AS name_14, citys_1.region_id AS region_id_1, citys_1.id AS id_14, citys_1.created_at AS created_at_14, citys_1.updated_at AS updated_at_14, users_1.name AS name_15, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_2, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_3, users_1.city_id, users_1.id AS id_15, users_1.created_at AS created_at_15, users_1.updated_at AS updated_at_15, payments_1.id AS id_16, payments_1.created_at AS created_at_16, payments_1.captured_at, payments_1.amount, payments_1.income_amount, payments_1.test, payments_1.status AS status_1, payments_1.user_id, payments_1.project_id, payments_1.stage_id AS stage_id_8, payments_1.updated_at AS updated_at_16, stages_1.number, stages_1.name AS name_16, stages_1.goal AS goal_1, stages_1.status AS status_2, stages_1.project_id AS project_id_1, stages_1.id AS id_17, stages_1.created_at AS created_at_17, stages_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, files_10.name AS name_18, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_19, files_10.created_at AS created_at_19, files_10.updated_at AS updated_at_19, countrys_3.name AS name_19, countrys_3.language AS language_3, countrys_3.id AS id_20, countrys_3.created_at AS created_at_20, countrys_3.updated_at AS updated_at_20, regions_3.name AS name_20, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_21, regions_3.created_at AS created_at_21, regions_3.updated_at AS updated_at_21, citys_2.name AS name_21, citys_2.region_id AS region_id_2, citys_2.id AS id_22, citys_2.created_at AS created_at_22, citys_2.updated_at AS updated_at_22, users_2.name AS name_22, users_2.password AS password_1, users_2.google_access_token AS google_access_token_1, users_2.email AS email_1, users_2.language AS language_4, users_2.role AS role_1, users_2.is_anonymous AS is_anonymous_1, users_2.is_active AS is_active_1, users_2.picture_id AS picture_id_5, users_2.city_id AS city_id_1, users_2.id AS id_23, users_2.created_at AS created_at_23, users_2.updated_at AS updated_at_23, files_11.name AS name_23, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_24, files_11.created_at AS created_at_24, files_11.updated_at AS updated_at_24, stages_2.number AS number_1, stages_2.name AS name_24, stages_2.goal AS goal_2, stages_2.status AS status_3, stages_2.project_id AS project_id_2, stages_2.id AS id_25, stages_2.created_at AS created_at_25, stages_2.updated_at AS updated_at_25, payments_2.id AS id_26, payments_2.created_at AS created_at_26, payments_2.captured_at AS captured_at_1, payments_2.amount AS amount_1, payments_2.income_amount AS income_amount_1, payments_2.test AS test_1, payments_2.status AS status_4, payments_2.user_id AS user_id_1, payments_2.project_id AS project_id_3, payments_2.stage_id AS stage_id_12, payments_2.updated_at AS updated_at_26 
+FROM projects LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects.fund_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = funds_1.region_id LEFT OUTER JOIN files AS files_1 ON files_1.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN files AS files_2 ON files_2.id = funds_1.picture_id LEFT OUTER JOIN files AS files_3 ON funds_1.id = files_3.fund_document_id LEFT OUTER JOIN files AS files_4 ON projects.id = files_4.project_document_id LEFT OUTER JOIN files AS files_5 ON projects.id = files_5.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects.id = stages_1.project_id LEFT OUTER JOIN files AS files_6 ON stages_1.id = files_6.stage_id LEFT OUTER JOIN payments AS payments_1 ON stages_1.id = payments_1.stage_id LEFT OUTER JOIN users AS users_1 ON users_1.id = payments_1.user_id LEFT OUTER JOIN files AS files_7 ON files_7.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = citys_1.region_id LEFT OUTER JOIN files AS files_8 ON files_8.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN payments AS payments_2 ON projects.id = payments_2.project_id LEFT OUTER JOIN users AS users_2 ON users_2.id = payments_2.user_id LEFT OUTER JOIN files AS files_9 ON files_9.id = users_2.picture_id LEFT OUTER JOIN citys AS citys_2 ON citys_2.id = users_2.city_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = citys_2.region_id LEFT OUTER JOIN files AS files_10 ON files_10.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments_2.stage_id LEFT OUTER JOIN files AS files_11 ON stages_2.id = files_11.stage_id 
+WHERE projects.id = ?
+INFO     sqlalchemy.engine.Engine:base.py:1842 [generated in 0.00121s] (1,)
+INFO     sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+__________________ TestPaymentCallback.test_callback_success ___________________
+
+self = <app.tests.payments.router.test_callback.TestPaymentCallback object at 0x745a180bf0>
+ac = <httpx.AsyncClient object at 0x745a20a900>
+
+    @patch("fastapi.Request.client", Address("185.71.76.1", 1234))  # For ip_security checker
+    async def test_callback_success(self, ac) -> None:
+        # --- Проверка данных ДО запроса ---
+        session_gen_before = get_session_with_commit()
+        session_before = await session_gen_before.__anext__()
+        payment_dao_before = PaymentDAO(session=session_before)
+        payments_before: list[Payment] = await payment_dao_before.find_all()
+    
+        print("\n--- Данные ДО запроса ---")
+        print(f"Количество платежей до: {len(payments_before)}")
+        for i, payment in enumerate(payments_before, 1):
+            print(f"Платеж {i}: ID={payment.id}, Amount={payment.amount}, User={payment.user_id}")
+    
+        # --- Отправка запроса ---
+>       response = await ac.post(
+            "/app/v1/payments/yookassa_callback",
+            json={"object": self.callback_mock_success}
+        )
+
+tests/payments/router/test_callback.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1859: in post
+    return await self.request(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1629: in send
+    response = await self._send_handling_auth(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+../../../../usr/lib/python3.12/site-packages/httpx/_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+../../../../usr/lib/python3.12/site-packages/httpx/_transports/asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/applications.py:112: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/errors.py:187: in __call__
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/errors.py:165: in __call__
+    await self.app(scope, receive, _send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/cors.py:85: in __call__
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/middleware/exceptions.py:62: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:714: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:734: in app
+    await route.handle(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:288: in handle
+    await self.app(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:76: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../../usr/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../../usr/lib/python3.12/site-packages/starlette/routing.py:73: in app
+    response = await f(request)
+../../../../usr/lib/python3.12/site-packages/fastapi/routing.py:301: in app
+    raw_response = await run_endpoint_function(
+../../../../usr/lib/python3.12/site-packages/fastapi/routing.py:212: in run_endpoint_function
+    return await dependant.call(**values)
+v1/payment/router.py:40: in yookassa_success_callback
+    await use_case.execute()
+v1/payment/use_cases/callback.py:21: in execute
+    await self.__create_payment_in_db()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <v1.payment.use_cases.callback.YooCallbackSuccessUseCaseImpl object at 0x74589cce90>
+
+    async def __create_payment_in_db(self):
+        self.webhook_object = await self.__get_webhook_data_object()
+        webhook_object = self.webhook_object
+        project: Project = await self.__get_project()
+    
+        payment_dao = PaymentDAO(session=self.session)
+        if webhook_object.status == PaymentStatusEnum.SUCCEEDED:
+            await payment_dao.add(
+                values=PaymentCreateSchema(
+                    id=webhook_object.id,
+                    amount=webhook_object.amount.value,
+                    income_amount=webhook_object.income_amount.value,
+                    test=webhook_object.test,
+                    status=PaymentStatusEnum.SUCCEEDED,
+                    user_id=webhook_object.metadata.user_id,
+                    project_id=webhook_object.metadata.project_id,
+                    stage_id=project.active_stage_number,
+                    created_at=webhook_object.created_at,
+                    captured_at=webhook_object.captured_at,
+                )
+            )
+    
+        else:
+>           raise NotImplementedError("Should handle other situations too")
+E           NotImplementedError: Should handle other situations too
+
+v1/payment/use_cases/callback.py:46: NotImplementedError
+----------------------------- Captured stdout call -----------------------------
+2025-06-13 18:58:34,881 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-06-13 18:58:35,029 INFO sqlalchemy.engine.Engine SELECT payments.id, payments.created_at, payments.captured_at, payments.amount, payments.income_amount, payments.test, payments.status, payments.user_id, payments.project_id, payments.stage_id, payments.updated_at, files_1.name, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id AS stage_id_1, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, files_2.name AS name_1, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_2, files_2.id AS id_2, files_2.created_at AS created_at_2, files_2.updated_at AS updated_at_2, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_3, countrys_1.created_at AS created_at_3, countrys_1.updated_at AS updated_at_3, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_4, regions_1.created_at AS created_at_4, regions_1.updated_at AS updated_at_4, citys_1.name AS name_4, citys_1.region_id, citys_1.id AS id_5, citys_1.created_at AS created_at_5, citys_1.updated_at AS updated_at_5, users_1.name AS name_5, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_1, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_1, users_1.city_id, users_1.id AS id_6, users_1.created_at AS created_at_6, users_1.updated_at AS updated_at_6, files_3.name AS name_6, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_3, files_3.id AS id_7, files_3.created_at AS created_at_7, files_3.updated_at AS updated_at_7, countrys_2.name AS name_7, countrys_2.language AS language_2, countrys_2.id AS id_8, countrys_2.created_at AS created_at_8, countrys_2.updated_at AS updated_at_8, regions_2.name AS name_8, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_9, regions_2.created_at AS created_at_9, regions_2.updated_at AS updated_at_9, files_4.name AS name_9, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_4, files_4.id AS id_10, files_4.created_at AS created_at_10, files_4.updated_at AS updated_at_10, files_5.name AS name_10, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_5, files_5.id AS id_11, files_5.created_at AS created_at_11, files_5.updated_at AS updated_at_11, funds_1.name AS name_11, funds_1.description, funds_1.hot_line, funds_1.address, funds_1.region_id AS region_id_1, funds_1.picture_id AS picture_id_3, funds_1.id AS id_12, funds_1.created_at AS created_at_12, funds_1.updated_at AS updated_at_12, files_6.name AS name_12, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_6, files_6.id AS id_13, files_6.created_at AS created_at_13, files_6.updated_at AS updated_at_13, files_7.name AS name_13, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_7, files_7.id AS id_14, files_7.created_at AS created_at_14, files_7.updated_at AS updated_at_14, files_8.name AS name_14, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_8, files_8.id AS id_15, files_8.created_at AS created_at_15, files_8.updated_at AS updated_at_15, stages_1.number, stages_1.name AS name_15, stages_1.goal, stages_1.status AS status_1, stages_1.project_id AS project_id_1, stages_1.id AS id_16, stages_1.created_at AS created_at_16, stages_1.updated_at AS updated_at_16, projects_1.name AS name_16, projects_1.status AS status_2, projects_1.description AS description_1, projects_1.goal AS goal_1, projects_1.fund_id, projects_1.id AS id_17, projects_1.created_at AS created_at_17, projects_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, countrys_3.name AS name_18, countrys_3.language AS language_3, countrys_3.id AS id_19, countrys_3.created_at AS created_at_19, countrys_3.updated_at AS updated_at_19, regions_3.name AS name_19, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_20, regions_3.created_at AS created_at_20, regions_3.updated_at AS updated_at_20, files_10.name AS name_20, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_21, files_10.created_at AS created_at_21, files_10.updated_at AS updated_at_21, files_11.name AS name_21, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_22, files_11.created_at AS created_at_22, files_11.updated_at AS updated_at_22, funds_2.name AS name_22, funds_2.description AS description_2, funds_2.hot_line AS hot_line_1, funds_2.address AS address_1, funds_2.region_id AS region_id_2, funds_2.picture_id AS picture_id_5, funds_2.id AS id_23, funds_2.created_at AS created_at_23, funds_2.updated_at AS updated_at_23, files_12.name AS name_23, files_12.size AS size_11, files_12.url AS url_11, files_12.type AS type_11, files_12.mime AS mime_11, files_12.fund_document_id AS fund_document_id_11, files_12.project_document_id AS project_document_id_11, files_12.project_picture_id AS project_picture_id_11, files_12.stage_id AS stage_id_12, files_12.id AS id_24, files_12.created_at AS created_at_24, files_12.updated_at AS updated_at_24, files_13.name AS name_24, files_13.size AS size_12, files_13.url AS url_12, files_13.type AS type_12, files_13.mime AS mime_12, files_13.fund_document_id AS fund_document_id_12, files_13.project_document_id AS project_document_id_12, files_13.project_picture_id AS project_picture_id_12, files_13.stage_id AS stage_id_13, files_13.id AS id_25, files_13.created_at AS created_at_25, files_13.updated_at AS updated_at_25, projects_2.name AS name_25, projects_2.status AS status_3, projects_2.description AS description_3, projects_2.goal AS goal_2, projects_2.fund_id AS fund_id_1, projects_2.id AS id_26, projects_2.created_at AS created_at_26, projects_2.updated_at AS updated_at_26, files_14.name AS name_26, files_14.size AS size_13, files_14.url AS url_13, files_14.type AS type_13, files_14.mime AS mime_13, files_14.fund_document_id AS fund_document_id_13, files_14.project_document_id AS project_document_id_13, files_14.project_picture_id AS project_picture_id_13, files_14.stage_id AS stage_id_14, files_14.id AS id_27, files_14.created_at AS created_at_27, files_14.updated_at AS updated_at_27, stages_2.number AS number_1, stages_2.name AS name_27, stages_2.goal AS goal_3, stages_2.status AS status_4, stages_2.project_id AS project_id_2, stages_2.id AS id_28, stages_2.created_at AS created_at_28, stages_2.updated_at AS updated_at_28 
+FROM payments LEFT OUTER JOIN users AS users_1 ON users_1.id = payments.user_id LEFT OUTER JOIN files AS files_1 ON files_1.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = citys_1.region_id LEFT OUTER JOIN files AS files_2 ON files_2.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN projects AS projects_1 ON projects_1.id = payments.project_id LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects_1.fund_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = funds_1.region_id LEFT OUTER JOIN files AS files_3 ON files_3.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN files AS files_4 ON files_4.id = funds_1.picture_id LEFT OUTER JOIN files AS files_5 ON funds_1.id = files_5.fund_document_id LEFT OUTER JOIN files AS files_6 ON projects_1.id = files_6.project_document_id LEFT OUTER JOIN files AS files_7 ON projects_1.id = files_7.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects_1.id = stages_1.project_id LEFT OUTER JOIN files AS files_8 ON stages_1.id = files_8.stage_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments.stage_id LEFT OUTER JOIN projects AS projects_2 ON projects_2.id = stages_2.project_id LEFT OUTER JOIN funds AS funds_2 ON funds_2.id = projects_2.fund_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = funds_2.region_id LEFT OUTER JOIN files AS files_9 ON files_9.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN files AS files_10 ON files_10.id = funds_2.picture_id LEFT OUTER JOIN files AS files_11 ON funds_2.id = files_11.fund_document_id LEFT OUTER JOIN files AS files_12 ON projects_2.id = files_12.project_document_id LEFT OUTER JOIN files AS files_13 ON projects_2.id = files_13.project_picture_id LEFT OUTER JOIN files AS files_14 ON stages_2.id = files_14.stage_id
+2025-06-13 18:58:35,029 INFO sqlalchemy.engine.Engine [generated in 0.00123s] ()
+
+--- Данные ДО запроса ---
+Количество платежей до: 6
+Платеж 1: ID=aca67d3a-3f83-4b99-8ef0-21a5e222f47e, Amount=1000.0, User=1
+Платеж 2: ID=b97fd7c5-30ed-456b-9b13-671336ddbddb, Amount=1000.0, User=1
+Платеж 3: ID=3e8f257f-fdec-44d6-8abc-5d6b16eadffb, Amount=1000.0, User=2
+Платеж 4: ID=d057adf7-cb7f-4f4e-b5a3-87cd396abf59, Amount=1000.0, User=2
+Платеж 5: ID=9865e036-6513-4391-a403-d62d10f5e0a1, Amount=1000.0, User=3
+Платеж 6: ID=f5a171c9-8534-4868-9734-b412832d5d67, Amount=1000.0, User=3
+2025-06-13 18:58:35,271 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-06-13 18:58:35,272 INFO sqlalchemy.engine.Engine SELECT projects.name, projects.status, projects.description, projects.goal, projects.fund_id, projects.id, projects.created_at, projects.updated_at, files_1.name AS name_1, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_2, countrys_1.created_at AS created_at_2, countrys_1.updated_at AS updated_at_2, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_3, regions_1.created_at AS created_at_3, regions_1.updated_at AS updated_at_3, files_2.name AS name_4, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_1, files_2.id AS id_4, files_2.created_at AS created_at_4, files_2.updated_at AS updated_at_4, files_3.name AS name_5, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_2, files_3.id AS id_5, files_3.created_at AS created_at_5, files_3.updated_at AS updated_at_5, funds_1.name AS name_6, funds_1.description AS description_1, funds_1.hot_line, funds_1.address, funds_1.region_id, funds_1.picture_id AS picture_id_1, funds_1.id AS id_6, funds_1.created_at AS created_at_6, funds_1.updated_at AS updated_at_6, files_4.name AS name_7, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_3, files_4.id AS id_7, files_4.created_at AS created_at_7, files_4.updated_at AS updated_at_7, files_5.name AS name_8, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_4, files_5.id AS id_8, files_5.created_at AS created_at_8, files_5.updated_at AS updated_at_8, files_6.name AS name_9, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_5, files_6.id AS id_9, files_6.created_at AS created_at_9, files_6.updated_at AS updated_at_9, files_7.name AS name_10, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_6, files_7.id AS id_10, files_7.created_at AS created_at_10, files_7.updated_at AS updated_at_10, files_8.name AS name_11, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_7, files_8.id AS id_11, files_8.created_at AS created_at_11, files_8.updated_at AS updated_at_11, countrys_2.name AS name_12, countrys_2.language AS language_1, countrys_2.id AS id_12, countrys_2.created_at AS created_at_12, countrys_2.updated_at AS updated_at_12, regions_2.name AS name_13, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_13, regions_2.created_at AS created_at_13, regions_2.updated_at AS updated_at_13, citys_1.name AS name_14, citys_1.region_id AS region_id_1, citys_1.id AS id_14, citys_1.created_at AS created_at_14, citys_1.updated_at AS updated_at_14, users_1.name AS name_15, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_2, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_3, users_1.city_id, users_1.id AS id_15, users_1.created_at AS created_at_15, users_1.updated_at AS updated_at_15, payments_1.id AS id_16, payments_1.created_at AS created_at_16, payments_1.captured_at, payments_1.amount, payments_1.income_amount, payments_1.test, payments_1.status AS status_1, payments_1.user_id, payments_1.project_id, payments_1.stage_id AS stage_id_8, payments_1.updated_at AS updated_at_16, stages_1.number, stages_1.name AS name_16, stages_1.goal AS goal_1, stages_1.status AS status_2, stages_1.project_id AS project_id_1, stages_1.id AS id_17, stages_1.created_at AS created_at_17, stages_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, files_10.name AS name_18, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_19, files_10.created_at AS created_at_19, files_10.updated_at AS updated_at_19, countrys_3.name AS name_19, countrys_3.language AS language_3, countrys_3.id AS id_20, countrys_3.created_at AS created_at_20, countrys_3.updated_at AS updated_at_20, regions_3.name AS name_20, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_21, regions_3.created_at AS created_at_21, regions_3.updated_at AS updated_at_21, citys_2.name AS name_21, citys_2.region_id AS region_id_2, citys_2.id AS id_22, citys_2.created_at AS created_at_22, citys_2.updated_at AS updated_at_22, users_2.name AS name_22, users_2.password AS password_1, users_2.google_access_token AS google_access_token_1, users_2.email AS email_1, users_2.language AS language_4, users_2.role AS role_1, users_2.is_anonymous AS is_anonymous_1, users_2.is_active AS is_active_1, users_2.picture_id AS picture_id_5, users_2.city_id AS city_id_1, users_2.id AS id_23, users_2.created_at AS created_at_23, users_2.updated_at AS updated_at_23, files_11.name AS name_23, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_24, files_11.created_at AS created_at_24, files_11.updated_at AS updated_at_24, stages_2.number AS number_1, stages_2.name AS name_24, stages_2.goal AS goal_2, stages_2.status AS status_3, stages_2.project_id AS project_id_2, stages_2.id AS id_25, stages_2.created_at AS created_at_25, stages_2.updated_at AS updated_at_25, payments_2.id AS id_26, payments_2.created_at AS created_at_26, payments_2.captured_at AS captured_at_1, payments_2.amount AS amount_1, payments_2.income_amount AS income_amount_1, payments_2.test AS test_1, payments_2.status AS status_4, payments_2.user_id AS user_id_1, payments_2.project_id AS project_id_3, payments_2.stage_id AS stage_id_12, payments_2.updated_at AS updated_at_26 
+FROM projects LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects.fund_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = funds_1.region_id LEFT OUTER JOIN files AS files_1 ON files_1.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN files AS files_2 ON files_2.id = funds_1.picture_id LEFT OUTER JOIN files AS files_3 ON funds_1.id = files_3.fund_document_id LEFT OUTER JOIN files AS files_4 ON projects.id = files_4.project_document_id LEFT OUTER JOIN files AS files_5 ON projects.id = files_5.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects.id = stages_1.project_id LEFT OUTER JOIN files AS files_6 ON stages_1.id = files_6.stage_id LEFT OUTER JOIN payments AS payments_1 ON stages_1.id = payments_1.stage_id LEFT OUTER JOIN users AS users_1 ON users_1.id = payments_1.user_id LEFT OUTER JOIN files AS files_7 ON files_7.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = citys_1.region_id LEFT OUTER JOIN files AS files_8 ON files_8.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN payments AS payments_2 ON projects.id = payments_2.project_id LEFT OUTER JOIN users AS users_2 ON users_2.id = payments_2.user_id LEFT OUTER JOIN files AS files_9 ON files_9.id = users_2.picture_id LEFT OUTER JOIN citys AS citys_2 ON citys_2.id = users_2.city_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = citys_2.region_id LEFT OUTER JOIN files AS files_10 ON files_10.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments_2.stage_id LEFT OUTER JOIN files AS files_11 ON stages_2.id = files_11.stage_id 
+WHERE projects.id = ?
+2025-06-13 18:58:35,273 INFO sqlalchemy.engine.Engine [cached since 1.511s ago] (1,)
+2025-06-13 18:58:35,360 INFO sqlalchemy.engine.Engine ROLLBACK
+----------------------------- Captured stderr call -----------------------------
+2025-06-13 18:58:34.878 | INFO     | v1.dao.base:find_all:53 - Поиск всех записей Payment по фильтрам: {}
+2025-06-13 18:58:35.263 | INFO     | v1.dao.base:find_all:58 - Найдено 6 записей.
+2025-06-13 18:58:35.359 | INFO     | v1.dao.base:find_one_or_none_by_id:31 - Запись Project с ID 1 найдена.
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1842 SELECT payments.id, payments.created_at, payments.captured_at, payments.amount, payments.income_amount, payments.test, payments.status, payments.user_id, payments.project_id, payments.stage_id, payments.updated_at, files_1.name, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id AS stage_id_1, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, files_2.name AS name_1, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_2, files_2.id AS id_2, files_2.created_at AS created_at_2, files_2.updated_at AS updated_at_2, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_3, countrys_1.created_at AS created_at_3, countrys_1.updated_at AS updated_at_3, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_4, regions_1.created_at AS created_at_4, regions_1.updated_at AS updated_at_4, citys_1.name AS name_4, citys_1.region_id, citys_1.id AS id_5, citys_1.created_at AS created_at_5, citys_1.updated_at AS updated_at_5, users_1.name AS name_5, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_1, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_1, users_1.city_id, users_1.id AS id_6, users_1.created_at AS created_at_6, users_1.updated_at AS updated_at_6, files_3.name AS name_6, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_3, files_3.id AS id_7, files_3.created_at AS created_at_7, files_3.updated_at AS updated_at_7, countrys_2.name AS name_7, countrys_2.language AS language_2, countrys_2.id AS id_8, countrys_2.created_at AS created_at_8, countrys_2.updated_at AS updated_at_8, regions_2.name AS name_8, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_9, regions_2.created_at AS created_at_9, regions_2.updated_at AS updated_at_9, files_4.name AS name_9, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_4, files_4.id AS id_10, files_4.created_at AS created_at_10, files_4.updated_at AS updated_at_10, files_5.name AS name_10, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_5, files_5.id AS id_11, files_5.created_at AS created_at_11, files_5.updated_at AS updated_at_11, funds_1.name AS name_11, funds_1.description, funds_1.hot_line, funds_1.address, funds_1.region_id AS region_id_1, funds_1.picture_id AS picture_id_3, funds_1.id AS id_12, funds_1.created_at AS created_at_12, funds_1.updated_at AS updated_at_12, files_6.name AS name_12, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_6, files_6.id AS id_13, files_6.created_at AS created_at_13, files_6.updated_at AS updated_at_13, files_7.name AS name_13, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_7, files_7.id AS id_14, files_7.created_at AS created_at_14, files_7.updated_at AS updated_at_14, files_8.name AS name_14, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_8, files_8.id AS id_15, files_8.created_at AS created_at_15, files_8.updated_at AS updated_at_15, stages_1.number, stages_1.name AS name_15, stages_1.goal, stages_1.status AS status_1, stages_1.project_id AS project_id_1, stages_1.id AS id_16, stages_1.created_at AS created_at_16, stages_1.updated_at AS updated_at_16, projects_1.name AS name_16, projects_1.status AS status_2, projects_1.description AS description_1, projects_1.goal AS goal_1, projects_1.fund_id, projects_1.id AS id_17, projects_1.created_at AS created_at_17, projects_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, countrys_3.name AS name_18, countrys_3.language AS language_3, countrys_3.id AS id_19, countrys_3.created_at AS created_at_19, countrys_3.updated_at AS updated_at_19, regions_3.name AS name_19, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_20, regions_3.created_at AS created_at_20, regions_3.updated_at AS updated_at_20, files_10.name AS name_20, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_21, files_10.created_at AS created_at_21, files_10.updated_at AS updated_at_21, files_11.name AS name_21, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_22, files_11.created_at AS created_at_22, files_11.updated_at AS updated_at_22, funds_2.name AS name_22, funds_2.description AS description_2, funds_2.hot_line AS hot_line_1, funds_2.address AS address_1, funds_2.region_id AS region_id_2, funds_2.picture_id AS picture_id_5, funds_2.id AS id_23, funds_2.created_at AS created_at_23, funds_2.updated_at AS updated_at_23, files_12.name AS name_23, files_12.size AS size_11, files_12.url AS url_11, files_12.type AS type_11, files_12.mime AS mime_11, files_12.fund_document_id AS fund_document_id_11, files_12.project_document_id AS project_document_id_11, files_12.project_picture_id AS project_picture_id_11, files_12.stage_id AS stage_id_12, files_12.id AS id_24, files_12.created_at AS created_at_24, files_12.updated_at AS updated_at_24, files_13.name AS name_24, files_13.size AS size_12, files_13.url AS url_12, files_13.type AS type_12, files_13.mime AS mime_12, files_13.fund_document_id AS fund_document_id_12, files_13.project_document_id AS project_document_id_12, files_13.project_picture_id AS project_picture_id_12, files_13.stage_id AS stage_id_13, files_13.id AS id_25, files_13.created_at AS created_at_25, files_13.updated_at AS updated_at_25, projects_2.name AS name_25, projects_2.status AS status_3, projects_2.description AS description_3, projects_2.goal AS goal_2, projects_2.fund_id AS fund_id_1, projects_2.id AS id_26, projects_2.created_at AS created_at_26, projects_2.updated_at AS updated_at_26, files_14.name AS name_26, files_14.size AS size_13, files_14.url AS url_13, files_14.type AS type_13, files_14.mime AS mime_13, files_14.fund_document_id AS fund_document_id_13, files_14.project_document_id AS project_document_id_13, files_14.project_picture_id AS project_picture_id_13, files_14.stage_id AS stage_id_14, files_14.id AS id_27, files_14.created_at AS created_at_27, files_14.updated_at AS updated_at_27, stages_2.number AS number_1, stages_2.name AS name_27, stages_2.goal AS goal_3, stages_2.status AS status_4, stages_2.project_id AS project_id_2, stages_2.id AS id_28, stages_2.created_at AS created_at_28, stages_2.updated_at AS updated_at_28 
+FROM payments LEFT OUTER JOIN users AS users_1 ON users_1.id = payments.user_id LEFT OUTER JOIN files AS files_1 ON files_1.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = citys_1.region_id LEFT OUTER JOIN files AS files_2 ON files_2.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN projects AS projects_1 ON projects_1.id = payments.project_id LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects_1.fund_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = funds_1.region_id LEFT OUTER JOIN files AS files_3 ON files_3.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN files AS files_4 ON files_4.id = funds_1.picture_id LEFT OUTER JOIN files AS files_5 ON funds_1.id = files_5.fund_document_id LEFT OUTER JOIN files AS files_6 ON projects_1.id = files_6.project_document_id LEFT OUTER JOIN files AS files_7 ON projects_1.id = files_7.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects_1.id = stages_1.project_id LEFT OUTER JOIN files AS files_8 ON stages_1.id = files_8.stage_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments.stage_id LEFT OUTER JOIN projects AS projects_2 ON projects_2.id = stages_2.project_id LEFT OUTER JOIN funds AS funds_2 ON funds_2.id = projects_2.fund_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = funds_2.region_id LEFT OUTER JOIN files AS files_9 ON files_9.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN files AS files_10 ON files_10.id = funds_2.picture_id LEFT OUTER JOIN files AS files_11 ON funds_2.id = files_11.fund_document_id LEFT OUTER JOIN files AS files_12 ON projects_2.id = files_12.project_document_id LEFT OUTER JOIN files AS files_13 ON projects_2.id = files_13.project_picture_id LEFT OUTER JOIN files AS files_14 ON stages_2.id = files_14.stage_id
+INFO     sqlalchemy.engine.Engine:base.py:1842 [generated in 0.00123s] ()
+INFO     sqlalchemy.engine.Engine:base.py:2698 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1842 SELECT projects.name, projects.status, projects.description, projects.goal, projects.fund_id, projects.id, projects.created_at, projects.updated_at, files_1.name AS name_1, files_1.size, files_1.url, files_1.type, files_1.mime, files_1.fund_document_id, files_1.project_document_id, files_1.project_picture_id, files_1.stage_id, files_1.id AS id_1, files_1.created_at AS created_at_1, files_1.updated_at AS updated_at_1, countrys_1.name AS name_2, countrys_1.language, countrys_1.id AS id_2, countrys_1.created_at AS created_at_2, countrys_1.updated_at AS updated_at_2, regions_1.name AS name_3, regions_1.picture_id, regions_1.country_id, regions_1.id AS id_3, regions_1.created_at AS created_at_3, regions_1.updated_at AS updated_at_3, files_2.name AS name_4, files_2.size AS size_1, files_2.url AS url_1, files_2.type AS type_1, files_2.mime AS mime_1, files_2.fund_document_id AS fund_document_id_1, files_2.project_document_id AS project_document_id_1, files_2.project_picture_id AS project_picture_id_1, files_2.stage_id AS stage_id_1, files_2.id AS id_4, files_2.created_at AS created_at_4, files_2.updated_at AS updated_at_4, files_3.name AS name_5, files_3.size AS size_2, files_3.url AS url_2, files_3.type AS type_2, files_3.mime AS mime_2, files_3.fund_document_id AS fund_document_id_2, files_3.project_document_id AS project_document_id_2, files_3.project_picture_id AS project_picture_id_2, files_3.stage_id AS stage_id_2, files_3.id AS id_5, files_3.created_at AS created_at_5, files_3.updated_at AS updated_at_5, funds_1.name AS name_6, funds_1.description AS description_1, funds_1.hot_line, funds_1.address, funds_1.region_id, funds_1.picture_id AS picture_id_1, funds_1.id AS id_6, funds_1.created_at AS created_at_6, funds_1.updated_at AS updated_at_6, files_4.name AS name_7, files_4.size AS size_3, files_4.url AS url_3, files_4.type AS type_3, files_4.mime AS mime_3, files_4.fund_document_id AS fund_document_id_3, files_4.project_document_id AS project_document_id_3, files_4.project_picture_id AS project_picture_id_3, files_4.stage_id AS stage_id_3, files_4.id AS id_7, files_4.created_at AS created_at_7, files_4.updated_at AS updated_at_7, files_5.name AS name_8, files_5.size AS size_4, files_5.url AS url_4, files_5.type AS type_4, files_5.mime AS mime_4, files_5.fund_document_id AS fund_document_id_4, files_5.project_document_id AS project_document_id_4, files_5.project_picture_id AS project_picture_id_4, files_5.stage_id AS stage_id_4, files_5.id AS id_8, files_5.created_at AS created_at_8, files_5.updated_at AS updated_at_8, files_6.name AS name_9, files_6.size AS size_5, files_6.url AS url_5, files_6.type AS type_5, files_6.mime AS mime_5, files_6.fund_document_id AS fund_document_id_5, files_6.project_document_id AS project_document_id_5, files_6.project_picture_id AS project_picture_id_5, files_6.stage_id AS stage_id_5, files_6.id AS id_9, files_6.created_at AS created_at_9, files_6.updated_at AS updated_at_9, files_7.name AS name_10, files_7.size AS size_6, files_7.url AS url_6, files_7.type AS type_6, files_7.mime AS mime_6, files_7.fund_document_id AS fund_document_id_6, files_7.project_document_id AS project_document_id_6, files_7.project_picture_id AS project_picture_id_6, files_7.stage_id AS stage_id_6, files_7.id AS id_10, files_7.created_at AS created_at_10, files_7.updated_at AS updated_at_10, files_8.name AS name_11, files_8.size AS size_7, files_8.url AS url_7, files_8.type AS type_7, files_8.mime AS mime_7, files_8.fund_document_id AS fund_document_id_7, files_8.project_document_id AS project_document_id_7, files_8.project_picture_id AS project_picture_id_7, files_8.stage_id AS stage_id_7, files_8.id AS id_11, files_8.created_at AS created_at_11, files_8.updated_at AS updated_at_11, countrys_2.name AS name_12, countrys_2.language AS language_1, countrys_2.id AS id_12, countrys_2.created_at AS created_at_12, countrys_2.updated_at AS updated_at_12, regions_2.name AS name_13, regions_2.picture_id AS picture_id_2, regions_2.country_id AS country_id_1, regions_2.id AS id_13, regions_2.created_at AS created_at_13, regions_2.updated_at AS updated_at_13, citys_1.name AS name_14, citys_1.region_id AS region_id_1, citys_1.id AS id_14, citys_1.created_at AS created_at_14, citys_1.updated_at AS updated_at_14, users_1.name AS name_15, users_1.password, users_1.google_access_token, users_1.email, users_1.language AS language_2, users_1.role, users_1.is_anonymous, users_1.is_active, users_1.picture_id AS picture_id_3, users_1.city_id, users_1.id AS id_15, users_1.created_at AS created_at_15, users_1.updated_at AS updated_at_15, payments_1.id AS id_16, payments_1.created_at AS created_at_16, payments_1.captured_at, payments_1.amount, payments_1.income_amount, payments_1.test, payments_1.status AS status_1, payments_1.user_id, payments_1.project_id, payments_1.stage_id AS stage_id_8, payments_1.updated_at AS updated_at_16, stages_1.number, stages_1.name AS name_16, stages_1.goal AS goal_1, stages_1.status AS status_2, stages_1.project_id AS project_id_1, stages_1.id AS id_17, stages_1.created_at AS created_at_17, stages_1.updated_at AS updated_at_17, files_9.name AS name_17, files_9.size AS size_8, files_9.url AS url_8, files_9.type AS type_8, files_9.mime AS mime_8, files_9.fund_document_id AS fund_document_id_8, files_9.project_document_id AS project_document_id_8, files_9.project_picture_id AS project_picture_id_8, files_9.stage_id AS stage_id_9, files_9.id AS id_18, files_9.created_at AS created_at_18, files_9.updated_at AS updated_at_18, files_10.name AS name_18, files_10.size AS size_9, files_10.url AS url_9, files_10.type AS type_9, files_10.mime AS mime_9, files_10.fund_document_id AS fund_document_id_9, files_10.project_document_id AS project_document_id_9, files_10.project_picture_id AS project_picture_id_9, files_10.stage_id AS stage_id_10, files_10.id AS id_19, files_10.created_at AS created_at_19, files_10.updated_at AS updated_at_19, countrys_3.name AS name_19, countrys_3.language AS language_3, countrys_3.id AS id_20, countrys_3.created_at AS created_at_20, countrys_3.updated_at AS updated_at_20, regions_3.name AS name_20, regions_3.picture_id AS picture_id_4, regions_3.country_id AS country_id_2, regions_3.id AS id_21, regions_3.created_at AS created_at_21, regions_3.updated_at AS updated_at_21, citys_2.name AS name_21, citys_2.region_id AS region_id_2, citys_2.id AS id_22, citys_2.created_at AS created_at_22, citys_2.updated_at AS updated_at_22, users_2.name AS name_22, users_2.password AS password_1, users_2.google_access_token AS google_access_token_1, users_2.email AS email_1, users_2.language AS language_4, users_2.role AS role_1, users_2.is_anonymous AS is_anonymous_1, users_2.is_active AS is_active_1, users_2.picture_id AS picture_id_5, users_2.city_id AS city_id_1, users_2.id AS id_23, users_2.created_at AS created_at_23, users_2.updated_at AS updated_at_23, files_11.name AS name_23, files_11.size AS size_10, files_11.url AS url_10, files_11.type AS type_10, files_11.mime AS mime_10, files_11.fund_document_id AS fund_document_id_10, files_11.project_document_id AS project_document_id_10, files_11.project_picture_id AS project_picture_id_10, files_11.stage_id AS stage_id_11, files_11.id AS id_24, files_11.created_at AS created_at_24, files_11.updated_at AS updated_at_24, stages_2.number AS number_1, stages_2.name AS name_24, stages_2.goal AS goal_2, stages_2.status AS status_3, stages_2.project_id AS project_id_2, stages_2.id AS id_25, stages_2.created_at AS created_at_25, stages_2.updated_at AS updated_at_25, payments_2.id AS id_26, payments_2.created_at AS created_at_26, payments_2.captured_at AS captured_at_1, payments_2.amount AS amount_1, payments_2.income_amount AS income_amount_1, payments_2.test AS test_1, payments_2.status AS status_4, payments_2.user_id AS user_id_1, payments_2.project_id AS project_id_3, payments_2.stage_id AS stage_id_12, payments_2.updated_at AS updated_at_26 
+FROM projects LEFT OUTER JOIN funds AS funds_1 ON funds_1.id = projects.fund_id LEFT OUTER JOIN regions AS regions_1 ON regions_1.id = funds_1.region_id LEFT OUTER JOIN files AS files_1 ON files_1.id = regions_1.picture_id LEFT OUTER JOIN countrys AS countrys_1 ON countrys_1.id = regions_1.country_id LEFT OUTER JOIN files AS files_2 ON files_2.id = funds_1.picture_id LEFT OUTER JOIN files AS files_3 ON funds_1.id = files_3.fund_document_id LEFT OUTER JOIN files AS files_4 ON projects.id = files_4.project_document_id LEFT OUTER JOIN files AS files_5 ON projects.id = files_5.project_picture_id LEFT OUTER JOIN stages AS stages_1 ON projects.id = stages_1.project_id LEFT OUTER JOIN files AS files_6 ON stages_1.id = files_6.stage_id LEFT OUTER JOIN payments AS payments_1 ON stages_1.id = payments_1.stage_id LEFT OUTER JOIN users AS users_1 ON users_1.id = payments_1.user_id LEFT OUTER JOIN files AS files_7 ON files_7.id = users_1.picture_id LEFT OUTER JOIN citys AS citys_1 ON citys_1.id = users_1.city_id LEFT OUTER JOIN regions AS regions_2 ON regions_2.id = citys_1.region_id LEFT OUTER JOIN files AS files_8 ON files_8.id = regions_2.picture_id LEFT OUTER JOIN countrys AS countrys_2 ON countrys_2.id = regions_2.country_id LEFT OUTER JOIN payments AS payments_2 ON projects.id = payments_2.project_id LEFT OUTER JOIN users AS users_2 ON users_2.id = payments_2.user_id LEFT OUTER JOIN files AS files_9 ON files_9.id = users_2.picture_id LEFT OUTER JOIN citys AS citys_2 ON citys_2.id = users_2.city_id LEFT OUTER JOIN regions AS regions_3 ON regions_3.id = citys_2.region_id LEFT OUTER JOIN files AS files_10 ON files_10.id = regions_3.picture_id LEFT OUTER JOIN countrys AS countrys_3 ON countrys_3.id = regions_3.country_id LEFT OUTER JOIN stages AS stages_2 ON stages_2.id = payments_2.stage_id LEFT OUTER JOIN files AS files_11 ON stages_2.id = files_11.stage_id 
+WHERE projects.id = ?
+INFO     sqlalchemy.engine.Engine:base.py:1842 [cached since 1.511s ago] (1,)
+INFO     sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+--------------------------- Captured stdout teardown ---------------------------
+2025-06-13 18:58:36,090 INFO sqlalchemy.engine.Engine ROLLBACK
+---------------------------- Captured log teardown -----------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2701 ROLLBACK
+=============================== warnings summary ===============================
+../../../../usr/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /data/data/com.termux/files/usr/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+../../../../usr/lib/python3.12/site-packages/pydantic/_internal/_config.py:323
+../../../../usr/lib/python3.12/site-packages/pydantic/_internal/_config.py:323
+../../../../usr/lib/python3.12/site-packages/pydantic/_internal/_config.py:323
+  /data/data/com.termux/files/usr/lib/python3.12/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/payments/router/test_callback.py::TestPaymentCallback::test_callback_cancelled
+  sys:1: SAWarning: Can't sort tables for DROP; an unresolvable foreign key dependency exists between tables: files, funds, projects, stages; and backend does not support ALTER.  To restore at least a partial sort, apply use_alter=True to ForeignKey and ForeignKeyConstraint objects involved in the cycle to mark these as known cycles that will be ignored.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/payments/router/test_callback.py::TestPaymentCallback::test_callback_cancelled
+FAILED tests/payments/router/test_callback.py::TestPaymentCallback::test_callback_success
+======================== 2 failed, 5 warnings in 3.75s =========================
